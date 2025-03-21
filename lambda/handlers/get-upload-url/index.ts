@@ -1,18 +1,8 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { randomBytes } from "crypto";
-
-const s3Client = new S3Client({});
-const BUCKET_NAME = process.env.BUCKET_NAME as string;
-if (!BUCKET_NAME) {
-  throw new Error("BUCKET_NAME environment variable is not set");
-}
-
-// Helper function to generate a random hex string
-const generateServerSecret = () => {
-  return randomBytes(32).toString("hex");
-};
+import { BUCKET_NAME, s3Client } from "../../common/s3-client";
+import { generateServerSecret } from "../../common/utils";
 
 export const handler = async (
   event: APIGatewayProxyEvent

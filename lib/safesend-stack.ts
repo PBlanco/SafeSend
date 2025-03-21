@@ -17,20 +17,25 @@ export class SafesendStack extends cdk.Stack {
       cors: [
         {
           allowedHeaders: ["*"],
-          allowedMethods: [s3.HttpMethods.PUT],
+          allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET],
           allowedOrigins: ["http://localhost:5173"],
           maxAge: 300,
         },
       ],
+      lifecycleRules: [
+        {
+          expiration: Duration.days(14),
+        },
+      ],
     });
 
-    // Create a Lambda function to generate pre-signed URLs for file uploads
-    const urlGeneratorLambda = new nodejs.NodejsFunction(
+    // Create Lambda functions for URL generation
+    const uploadUrlLambda = new nodejs.NodejsFunction(
       this,
-      "UrlGeneratorLambda",
+      "UploadUrlGeneratorLambda",
       {
         runtime: lambda.Runtime.NODEJS_LATEST,
-        entry: "lambda/index.ts",
+        entry: "lambda/handlers/get-upload-url/index.ts",
         handler: "handler",
         environment: {
           BUCKET_NAME: filesBucket.bucketName,
@@ -39,10 +44,25 @@ export class SafesendStack extends cdk.Stack {
       }
     );
 
-    // Grant Lambda permissions to put objects in the S3 bucket
-    filesBucket.grantPut(urlGeneratorLambda);
+    const downloadUrlLambda = new nodejs.NodejsFunction(
+      this,
+      "DownloadUrlGeneratorLambda",
+      {
+        runtime: lambda.Runtime.NODEJS_LATEST,
+        entry: "lambda/handlers/get-download-url/index.ts",
+        handler: "handler",
+        environment: {
+          BUCKET_NAME: filesBucket.bucketName,
+          ALLOWED_ORIGIN: "http://localhost:5173",
+        },
+      }
+    );
 
-    // Create an API Gateway to trigger the Lambda function
+    // Grant Lambda permissions
+    filesBucket.grantPut(uploadUrlLambda);
+    filesBucket.grantRead(downloadUrlLambda);
+
+    // Create an API Gateway to trigger the Lambda functions
     const api = new apigateway.RestApi(this, "SendSafelyApi", {
       restApiName: "SendSafely Prototype Service",
       defaultCorsPreflightOptions: {
@@ -53,11 +73,28 @@ export class SafesendStack extends cdk.Stack {
       },
     });
 
-    const generateUrlIntegration = new apigateway.LambdaIntegration(
-      urlGeneratorLambda
+    // Upload URL endpoint
+    const uploadUrlIntegration = new apigateway.LambdaIntegration(
+      uploadUrlLambda
     );
-    const generateUrlResource = api.root.addResource("generate-upload-url");
-    generateUrlResource.addMethod("GET", generateUrlIntegration, {
+    const uploadUrlResource = api.root.addResource("generate-upload-url");
+    uploadUrlResource.addMethod("GET", uploadUrlIntegration, {
+      methodResponses: [
+        {
+          statusCode: "200",
+          responseParameters: {
+            "method.response.header.Access-Control-Allow-Origin": true,
+          },
+        },
+      ],
+    });
+
+    // Download URL endpoint
+    const downloadUrlIntegration = new apigateway.LambdaIntegration(
+      downloadUrlLambda
+    );
+    const downloadUrlResource = api.root.addResource("generate-download-url");
+    downloadUrlResource.addMethod("GET", downloadUrlIntegration, {
       methodResponses: [
         {
           statusCode: "200",

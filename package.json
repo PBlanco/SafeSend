@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "local-lambda": "ts-node test/local-lambda.ts"
+    "local-upload-lambda": "ts-node test/local-upload-lambda.ts",
+    "local-download-lambda": "ts-node test/local-download-lambda.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.147",

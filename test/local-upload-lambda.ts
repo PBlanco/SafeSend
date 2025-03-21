@@ -3,7 +3,7 @@ dotenv.config();
 console.log("BUCKET_NAME in local-lambda.ts", process.env.BUCKET_NAME);
 
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { handler } from "../lambda/index";
+import { handler } from "../lambda/handlers/get-upload-url/index";
 
 const event: APIGatewayProxyEvent = {
   body: "",
