@@ -3,6 +3,7 @@ import { encryptFile, generateClientSecret } from "../utils/crypto/encryption";
 import { deriveKey } from "../utils/crypto/keys";
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
+const PATH = "generate-upload-url";
 
 if (!API_ENDPOINT) {
   throw new Error("API_ENDPOINT is not set");
@@ -18,7 +19,7 @@ const Upload: React.FC = () => {
 
     try {
       setMessage("Requesting upload URL...");
-      const res = await fetch(API_ENDPOINT + "/generate-upload-url");
+      const res = await fetch(API_ENDPOINT + PATH);
       const { uploadURL, key, serverSecret } = await res.json();
 
       const clientSecret = generateClientSecret();

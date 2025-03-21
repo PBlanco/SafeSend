@@ -1,4 +1,4 @@
-import { createMessage, encrypt, enums } from "openpgp";
+import { createMessage, decrypt, encrypt, enums, readMessage } from "openpgp";
 
 // Utility to generate a random hex string (256 bits = 32 bytes)
 export const generateRandomHex = (length: number) => {
@@ -29,4 +29,16 @@ export const encryptFile = async (file: File, key: string): Promise<Blob> => {
 export const generateClientSecret = () => {
   // 256 bits as hex string
   return generateRandomHex(32);
+};
+
+export const decryptBlob = async (blob: Blob, key: string): Promise<Blob> => {
+  const encryptedArrayBuffer = await blob.arrayBuffer();
+  const decryptedData = await decrypt({
+    message: await readMessage({
+      binaryMessage: new Uint8Array(encryptedArrayBuffer),
+    }),
+    passwords: [key],
+    format: "binary",
+  });
+  return new Blob([decryptedData.data as Uint8Array]);
 };

@@ -1,27 +1,64 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { decryptBlob } from "../utils/crypto/encryption";
 import { deriveKey } from "../utils/crypto/keys";
+
+const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
+const PATH = "generate-download-url";
 
 const Download: React.FC = () => {
   const [message, setMessage] = useState("");
   const location = useLocation();
 
   const downloadFile = async () => {
-    const params = new URLSearchParams(location.search);
-    const serverSecretParam = params.get("serverSecret");
-    const hashValue = location.hash.slice(1);
+    try {
+      const params = new URLSearchParams(location.search);
+      const fileKey = params.get("fileKey");
+      const serverSecretParam = params.get("serverSecret");
+      const hashValue = location.hash.slice(1);
 
-    if (!serverSecretParam || !hashValue) {
-      setMessage("Can not download file. Missing required parameters");
-      return;
+      if (!serverSecretParam || !hashValue || !fileKey) {
+        throw new Error("Can not download file. Missing required parameters");
+      }
+
+      setMessage("Generating download URL...");
+      const response = await fetch(
+        `${API_ENDPOINT}${PATH}?key=${encodeURIComponent(fileKey)}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+      const { downloadURL } = await response.json();
+
+      setMessage("Downloading encrypted file...");
+      const encryptedResponse = await fetch(downloadURL);
+      const encryptedBlob = await encryptedResponse.blob();
+
+      setMessage("Decrypting file...");
+      const decryptedBlob = await decryptBlob(
+        encryptedBlob,
+        deriveKey(serverSecretParam, hashValue)
+      );
+
+      // Create and trigger download
+      const downloadUrl = URL.createObjectURL(decryptedBlob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = "decrypted-file";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl); // Clean up the URL object
+
+      setMessage("File decrypted and downloaded!");
+    } catch (error: unknown) {
+      setMessage(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
     }
-
-    const finalKey = deriveKey(serverSecretParam, hashValue);
-    const response = await fetch(
-      `/api/download?fileKey=${fileKey}&serverSecret=${serverSecret}`
-    );
-    const data = await response.json();
-    console.log(data);
   };
 
   return (
