@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/env.d.ts","./src/main.tsx","./src/types.d.ts","./src/config/crypto-config.ts","./src/pages/download.tsx","./src/pages/upload.tsx","./src/utils/crypto/encryption.ts","./src/utils/crypto/keys.ts"],"version":"5.8.2"}
