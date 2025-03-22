@@ -14,8 +14,6 @@ export default defineConfig({
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           // Split crypto-related dependencies
           "vendor-crypto": ["openpgp"],
-          // Split AWS dependencies
-          "vendor-aws": ["aws-amplify"],
         },
       },
     },
