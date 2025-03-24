@@ -34,3 +34,5 @@ tsconfig.*.tsbuildinfo
 # Build output
 dist/
 build/
+
+.cursor/**

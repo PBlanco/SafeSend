@@ -19,7 +19,15 @@ const Upload: React.FC = () => {
 
     try {
       setMessage("Requesting upload URL...");
-      const res = await fetch(API_ENDPOINT + PATH);
+      const res = await fetch(
+        `${API_ENDPOINT}${PATH}?filename=${encodeURIComponent(file.name)}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
       const { uploadURL, key, serverSecret } = await res.json();
 
       const clientSecret = generateClientSecret();

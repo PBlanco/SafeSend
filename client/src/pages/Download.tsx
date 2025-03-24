@@ -37,6 +37,10 @@ const Download: React.FC = () => {
       const encryptedResponse = await fetch(downloadURL);
       const encryptedBlob = await encryptedResponse.blob();
 
+      const originalFilename = encryptedResponse.headers.get(
+        "x-amz-meta-original-filename"
+      );
+
       setMessage("Decrypting file...");
       const decryptedBlob = await decryptBlob(
         encryptedBlob,
@@ -47,7 +51,9 @@ const Download: React.FC = () => {
       const downloadUrl = URL.createObjectURL(decryptedBlob);
       const link = document.createElement("a");
       link.href = downloadUrl;
-      link.download = "decrypted-file";
+      link.download = originalFilename
+        ? decodeURIComponent(originalFilename)
+        : "decrypted-file";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

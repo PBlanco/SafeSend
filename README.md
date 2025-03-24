@@ -11,7 +11,7 @@ A secure file transfer application built with AWS CDK, TypeScript, and React. Th
 
 ## Prerequisites
 
-- Node.js (v16 or later)
+- Node.js (v20 or later)
 - AWS CLI configured with appropriate credentials
 - npm or yarn package manager
 
