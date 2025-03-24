@@ -1,0 +1,25 @@
+version: 1
+applications:
+  - appRoot: client
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm use 20
+            - npm ci
+            - npm run type-check
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - .vite/**/*
+          - dist/**/*
+      env:
+        variables:
+          NODE_ENV: "production"

@@ -6,9 +6,15 @@ import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 
+interface SafesendStackProps extends cdk.StackProps {
+  allowedOrigins: string[];
+}
+
 export class SafesendStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: SafesendStackProps) {
     super(scope, id, props);
+
+    const { allowedOrigins } = props;
 
     // Create S3 bucket to store encrypted files
     const filesBucket = new s3.Bucket(this, "FilesBucket", {
@@ -18,7 +24,7 @@ export class SafesendStack extends cdk.Stack {
         {
           allowedHeaders: ["*"],
           allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET],
-          allowedOrigins: ["http://localhost:5173"],
+          allowedOrigins,
           maxAge: 300,
         },
       ],
@@ -39,7 +45,7 @@ export class SafesendStack extends cdk.Stack {
         handler: "handler",
         environment: {
           BUCKET_NAME: filesBucket.bucketName,
-          ALLOWED_ORIGIN: "http://localhost:5173",
+          ALLOWED_ORIGINS: allowedOrigins.join(","),
         },
       }
     );
@@ -53,7 +59,7 @@ export class SafesendStack extends cdk.Stack {
         handler: "handler",
         environment: {
           BUCKET_NAME: filesBucket.bucketName,
-          ALLOWED_ORIGIN: "http://localhost:5173",
+          ALLOWED_ORIGINS: allowedOrigins.join(","),
         },
       }
     );
@@ -66,7 +72,7 @@ export class SafesendStack extends cdk.Stack {
     const api = new apigateway.RestApi(this, "SendSafelyApi", {
       restApiName: "SendSafely Prototype Service",
       defaultCorsPreflightOptions: {
-        allowOrigins: ["http://localhost:5173"],
+        allowOrigins: allowedOrigins,
         allowMethods: ["GET", "PUT", "OPTIONS"],
         allowHeaders: ["Content-Type", "Origin", "Accept"],
         maxAge: Duration.minutes(5),

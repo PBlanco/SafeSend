@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./",
     "lib": [
       "es2020",
       "dom"
@@ -26,6 +28,8 @@
   },
   "exclude": [
     "node_modules",
-    "cdk.out"
+    "cdk.out",
+    "dist",
+    "client"
   ]
 }

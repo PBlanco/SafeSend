@@ -2,13 +2,14 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { BUCKET_NAME, s3Client } from "../../common/s3-client";
-import { generateServerSecret } from "../../common/utils";
+import { createLambdaResponse, generateServerSecret } from "../../common/utils";
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   const key = `uploads/${Date.now()}.enc`;
   const serverSecret = generateServerSecret();
+  const origin = event.headers.origin || "";
 
   try {
     const command = new PutObjectCommand({
@@ -20,26 +21,14 @@ export const handler = async (
       expiresIn: 300, // 5 minutes
     });
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "http://localhost:5173",
-        "Access-Control-Allow-Headers": "Content-Type,Origin,Accept",
-        "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
-        "Access-Control-Max-Age": "300", // 5 minutes
-      },
-      body: JSON.stringify({ uploadURL, key, serverSecret }),
-    };
+    return createLambdaResponse(origin, 200, {
+      uploadURL,
+      key,
+      serverSecret,
+    });
   } catch (error) {
-    return {
-      statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "http://localhost:5173",
-        "Access-Control-Allow-Headers": "Content-Type,Origin,Accept",
-        "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
-        "Access-Control-Max-Age": "300",
-      },
-      body: JSON.stringify({ error: (error as Error).message }),
-    };
+    return createLambdaResponse(origin, 500, {
+      error: (error as Error).message,
+    });
   }
 };

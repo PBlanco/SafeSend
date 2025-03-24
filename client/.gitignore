@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*
+
+# Amplify
+.amplify/
+amplify/
+amplify-mock-data/
+amplifyconfiguration.json
+amplifyconfiguration.dart
+amplifyconfiguration.dart.bak
+amplify-build-config.json
+amplify-gradle-config.json
+
+# Build output
+dist/
+build/
+.vite/
