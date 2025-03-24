@@ -14,4 +14,5 @@ if (!allowedOrigins) throw new Error("Allowed Origins must be set");
 
 new SafesendStack(app, "SafesendStack", {
   allowedOrigins,
+  expirationDays: 1,
 });

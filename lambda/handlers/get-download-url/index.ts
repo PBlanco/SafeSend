@@ -4,6 +4,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { BUCKET_NAME, s3Client } from "../../common/s3-client";
 import { createLambdaResponse } from "../../common/utils";
 
+const EXPIRES_IN = 300; // 5 minutes
+
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
@@ -23,7 +25,7 @@ export const handler = async (
     });
 
     const downloadURL = await getSignedUrl(s3Client, command, {
-      expiresIn: 300, // 5 minutes
+      expiresIn: EXPIRES_IN,
     });
 
     return createLambdaResponse(origin, 200, { downloadURL });
