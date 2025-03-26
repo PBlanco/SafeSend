@@ -9,13 +9,14 @@ import { Construct } from "constructs";
 interface SafesendStackProps extends cdk.StackProps {
   allowedOrigins: string[];
   expirationDays: number;
+  maxFileSize: string;
 }
 
 export class SafesendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SafesendStackProps) {
     super(scope, id, props);
 
-    const { allowedOrigins, expirationDays } = props;
+    const { allowedOrigins, expirationDays, maxFileSize } = props;
 
     // Create S3 bucket to store encrypted files
     const filesBucket = new s3.Bucket(this, "FilesBucket", {
@@ -24,7 +25,7 @@ export class SafesendStack extends cdk.Stack {
       cors: [
         {
           allowedHeaders: ["*"],
-          allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET],
+          allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST],
           allowedOrigins,
           maxAge: 300,
           exposedHeaders: ["x-amz-meta-original-filename"],
@@ -48,6 +49,7 @@ export class SafesendStack extends cdk.Stack {
         environment: {
           BUCKET_NAME: filesBucket.bucketName,
           ALLOWED_ORIGINS: allowedOrigins.join(","),
+          MAX_FILE_SIZE: maxFileSize,
         },
       }
     );
@@ -66,8 +68,8 @@ export class SafesendStack extends cdk.Stack {
       }
     );
 
-    // Grant Lambda permissions
-    filesBucket.grantPut(uploadUrlLambda);
+    // Grant lambda permissions to get presigned URLs
+    filesBucket.grantWrite(uploadUrlLambda);
     filesBucket.grantRead(downloadUrlLambda);
 
     // Create an API Gateway to trigger the Lambda functions
@@ -75,7 +77,7 @@ export class SafesendStack extends cdk.Stack {
       restApiName: "SendSafely Prototype Service",
       defaultCorsPreflightOptions: {
         allowOrigins: allowedOrigins,
-        allowMethods: ["GET", "PUT", "OPTIONS"],
+        allowMethods: ["GET", "OPTIONS"],
         allowHeaders: ["Content-Type", "Origin", "Accept"],
         maxAge: Duration.minutes(5),
       },

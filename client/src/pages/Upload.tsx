@@ -28,7 +28,7 @@ const Upload: React.FC = () => {
           },
         }
       );
-      const { uploadURL, key, serverSecret } = await res.json();
+      const { post, key, serverSecret } = await res.json();
 
       const clientSecret = generateClientSecret();
       const finalKey = deriveKey(serverSecret, clientSecret);
@@ -37,15 +37,30 @@ const Upload: React.FC = () => {
       const encryptedFile = await encryptFile(file, finalKey);
 
       setMessage("Uploading encrypted file...");
-      const response = await fetch(uploadURL, {
-        method: "PUT",
-        body: encryptedFile,
-        headers: {
-          "Content-Type": "application/octet-stream",
-        },
+      const formData = new FormData();
+      Object.entries(post.fields).forEach(([field, value]) => {
+        formData.append(field, value as string);
+      });
+      formData.append("file", encryptedFile);
+
+      const response = await fetch(post.url, {
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {
+        const responseText = await response.text();
+        if (responseText.includes("EntityTooLarge")) {
+          const maxSize = parseInt(
+            responseText.match(/MaxSizeAllowed>(\d+)</)?.[1] || "0"
+          );
+          throw new Error(
+            `File is too large. Maximum allowed size is ${(
+              maxSize /
+              (1024 * 1024)
+            ).toFixed(1)}MB`
+          );
+        }
         throw new Error(`Upload failed: ${response.statusText}`);
       }
 
@@ -65,6 +80,17 @@ const Upload: React.FC = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile && selectedFile.size > 5 * 1024 * 1024) {
+      setFile(null);
+      setMessage("File is too large. Maximum allowed size is 5MB");
+      return;
+    }
+    setFile(selectedFile || null);
+    setMessage("");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
@@ -76,7 +102,7 @@ const Upload: React.FC = () => {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
               <input
                 type="file"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={handleFileChange}
                 className="hidden"
               />
               <div className="text-gray-600">
