@@ -80,6 +80,17 @@ const Upload: React.FC = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile && selectedFile.size > 5 * 1024 * 1024) {
+      setFile(null);
+      setMessage("File is too large. Maximum allowed size is 5MB");
+      return;
+    }
+    setFile(selectedFile || null);
+    setMessage("");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
@@ -91,7 +102,7 @@ const Upload: React.FC = () => {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
               <input
                 type="file"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={handleFileChange}
                 className="hidden"
               />
               <div className="text-gray-600">
