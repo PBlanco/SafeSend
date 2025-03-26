@@ -9,13 +9,14 @@ import { Construct } from "constructs";
 interface SafesendStackProps extends cdk.StackProps {
   allowedOrigins: string[];
   expirationDays: number;
+  maxFileSize: string;
 }
 
 export class SafesendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SafesendStackProps) {
     super(scope, id, props);
 
-    const { allowedOrigins, expirationDays } = props;
+    const { allowedOrigins, expirationDays, maxFileSize } = props;
 
     // Create S3 bucket to store encrypted files
     const filesBucket = new s3.Bucket(this, "FilesBucket", {
@@ -48,6 +49,7 @@ export class SafesendStack extends cdk.Stack {
         environment: {
           BUCKET_NAME: filesBucket.bucketName,
           ALLOWED_ORIGINS: allowedOrigins.join(","),
+          MAX_FILE_SIZE: maxFileSize,
         },
       }
     );

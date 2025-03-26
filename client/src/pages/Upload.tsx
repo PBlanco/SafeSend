@@ -30,7 +30,6 @@ const Upload: React.FC = () => {
       );
       const { post, key, serverSecret } = await res.json();
 
-      debugger;
       const clientSecret = generateClientSecret();
       const finalKey = deriveKey(serverSecret, clientSecret);
 
@@ -50,6 +49,18 @@ const Upload: React.FC = () => {
       });
 
       if (!response.ok) {
+        const responseText = await response.text();
+        if (responseText.includes("EntityTooLarge")) {
+          const maxSize = parseInt(
+            responseText.match(/MaxSizeAllowed>(\d+)</)?.[1] || "0"
+          );
+          throw new Error(
+            `File is too large. Maximum allowed size is ${(
+              maxSize /
+              (1024 * 1024)
+            ).toFixed(1)}MB`
+          );
+        }
         throw new Error(`Upload failed: ${response.statusText}`);
       }
 

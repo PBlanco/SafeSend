@@ -12,13 +12,14 @@ export const handler = async (
   const serverSecret = generateServerSecret();
   const origin = event.headers.origin || "";
   const filename = event.queryStringParameters?.filename || "filename";
+  const maxFileSize = parseInt(process.env.MAX_FILE_SIZE || "5242880");
 
   try {
     const post = await createPresignedPost(s3Client, {
       Bucket: BUCKET_NAME,
       Key: key,
       Conditions: [
-        ["content-length-range", 0, 5 * 1024 * 1024], // 5 MB max
+        ["content-length-range", 0, maxFileSize],
         { "x-amz-meta-original-filename": filename },
       ],
       Expires: EXPIRES_IN,
