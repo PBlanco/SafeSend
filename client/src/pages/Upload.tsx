@@ -28,8 +28,9 @@ const Upload: React.FC = () => {
           },
         }
       );
-      const { uploadURL, key, serverSecret } = await res.json();
+      const { post, key, serverSecret } = await res.json();
 
+      debugger;
       const clientSecret = generateClientSecret();
       const finalKey = deriveKey(serverSecret, clientSecret);
 
@@ -37,12 +38,15 @@ const Upload: React.FC = () => {
       const encryptedFile = await encryptFile(file, finalKey);
 
       setMessage("Uploading encrypted file...");
-      const response = await fetch(uploadURL, {
-        method: "PUT",
-        body: encryptedFile,
-        headers: {
-          "Content-Type": "application/octet-stream",
-        },
+      const formData = new FormData();
+      Object.entries(post.fields).forEach(([field, value]) => {
+        formData.append(field, value as string);
+      });
+      formData.append("file", encryptedFile);
+
+      const response = await fetch(post.url, {
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {

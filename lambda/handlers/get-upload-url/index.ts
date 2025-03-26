@@ -1,5 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { BUCKET_NAME, s3Client } from "../../common/s3-client";
 import { createLambdaResponse, generateServerSecret } from "../../common/utils";
@@ -15,20 +14,21 @@ export const handler = async (
   const filename = event.queryStringParameters?.filename || "filename";
 
   try {
-    const command = new PutObjectCommand({
+    const post = await createPresignedPost(s3Client, {
       Bucket: BUCKET_NAME,
       Key: key,
-      Metadata: {
-        "original-filename": filename,
+      Conditions: [
+        ["content-length-range", 0, 5 * 1024 * 1024], // 5 MB max
+        { "x-amz-meta-original-filename": filename },
+      ],
+      Expires: EXPIRES_IN,
+      Fields: {
+        "x-amz-meta-original-filename": filename,
       },
     });
 
-    const uploadURL = await getSignedUrl(s3Client, command, {
-      expiresIn: EXPIRES_IN,
-    });
-
     return createLambdaResponse(origin, 200, {
-      uploadURL,
+      post,
       key,
       serverSecret,
     });
