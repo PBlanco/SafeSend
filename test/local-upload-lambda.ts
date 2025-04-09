@@ -1,19 +1,22 @@
 import * as dotenv from "dotenv";
 dotenv.config();
-console.log("BUCKET_NAME in local-lambda.ts", process.env.BUCKET_NAME);
 
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { handler } from "../lambda/handlers/get-upload-url/index";
 
 const event: APIGatewayProxyEvent = {
   body: "",
-  headers: {},
+  headers: {
+    origin: "http://localhost:5173",
+  },
   multiValueHeaders: {},
   httpMethod: "GET",
   isBase64Encoded: false,
   path: "/generate-upload-url",
   pathParameters: null,
-  queryStringParameters: null,
+  queryStringParameters: {
+    filename: "test-file.txt",
+  },
   multiValueQueryStringParameters: null,
   stageVariables: null,
   requestContext: {
