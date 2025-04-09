@@ -105,7 +105,7 @@ const Upload: React.FC = () => {
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <div className="text-gray-600">
+              <div className="text-gray-600 truncate">
                 {file ? file.name : "Click to select a file"}
               </div>
             </div>
