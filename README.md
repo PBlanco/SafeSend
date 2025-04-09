@@ -6,7 +6,12 @@ A secure file transfer application built with AWS CDK, TypeScript, and React. Th
 
 - `/client` - React frontend application built with Vite
 - `/lambda` - AWS Lambda functions for handling file operations
+  - `/handlers` - Lambda function handlers for upload and download URL generation
+  - `/common` - Shared code between Lambda functions
+  - `/types` - TypeScript type definitions
 - `/lib` - CDK infrastructure code
+  - `safesend-stack.ts` - Main CDK stack defining AWS resources
+- `/bin` - CDK app entry point
 - `/test` - Test files for the infrastructure and Lambda functions
 
 ## Prerequisites
@@ -29,8 +34,8 @@ npm install
 ```
 
 3. Configure your environment variables:
-- Copy `.env.example` to `.env` (if available)
-- Set up necessary AWS credentials
+- Copy `.env.example` to `.env` in both the root directory and client directory
+- Set up necessary AWS credentials and API endpoints
 
 ## Development Commands
 
@@ -56,9 +61,48 @@ From the `client` directory:
 * `npm run build`   - Build for production
 * `npm run preview` - Preview production build locally
 
-## Security
+## Deployment
 
-This application implements secure file transfer using AWS pre-signed URLs and S3 bucket policies. All file transfers are encrypted in transit and at rest.
+### Backend Deployment
+
+The backend infrastructure is deployed using AWS CDK:
+
+```bash
+npx cdk deploy
+```
+
+### Frontend Deployment
+
+The client application is deployed using AWS Amplify:
+
+1. Connect your GitHub repository to AWS Amplify through the AWS Console
+2. Configure the build settings to use the following commands:
+   - Build command: `npm run build`
+   - Output directory: `dist`
+3. Set up environment variables in the Amplify Console
+4. Configure automatic deployments from the main branch
+
+When changes are pushed to the main branch, Amplify will automatically build and deploy the updated client application.
+
+## Architecture
+
+This application uses the following AWS services:
+
+- **S3 Bucket**: Stores uploaded files with automatic expiration
+- **Lambda Functions**: Generate pre-signed URLs for secure uploads and downloads
+- **API Gateway**: Provides RESTful endpoints for the Lambda functions
+- **IAM**: Manages permissions between services
+- **Amplify**: Hosts and deploys the frontend application
+
+The application implements secure file transfer using AWS pre-signed URLs and S3 bucket policies. All file transfers are encrypted in transit and at rest.
+
+## Configuration
+
+The application can be configured through the following parameters:
+
+- `allowedOrigins`: List of allowed CORS origins
+- `expirationDays`: Number of days before files are automatically deleted
+- `maxFileSize`: Maximum allowed file size for uploads
 
 ## License
 
