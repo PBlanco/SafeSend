@@ -98,6 +98,61 @@ This application uses the following AWS services:
 
 The application implements secure file transfer using AWS pre-signed URLs and S3 bucket policies. All file transfers are encrypted in transit and at rest.
 
+```mermaid
+flowchart TD
+    subgraph "Frontend Layer"
+        FE["React Client (Vite via AWS Amplify)"]:::frontend
+    end
+
+    subgraph "AWS Backend (Serverless)"
+        AG["API Gateway - REST Endpoints"]:::gateway
+        subgraph "Lambda Functions"
+            L1["Lambda: get-upload-url"]:::lambda
+            L2["Lambda: get-download-url"]:::lambda
+        end
+        S3["S3 Bucket - Encrypted File Storage"]:::storage
+        COMMON["Shared Lambda Utilities"]:::common
+    end
+
+    subgraph "Infrastructure Provisioning"
+        CDK["CDK Stack - Infrastructure as Code"]:::cdk
+    end
+
+    %% Data Flows
+    FE -->|"HTTP_request"| AG
+    AG -->|"Invoke"| L1
+    AG -->|"Invoke"| L2
+    L1 -->|"Uses_common"| COMMON
+    L2 -->|"Uses_common"| COMMON
+    L1 -->|"Generates_URL"| S3
+    L2 -->|"Generates_URL"| S3
+    S3 -->|"Returns_URL"| AG
+    AG -->|"Sends_Response"| FE
+
+    %% Provisioning Associations via CDK
+    CDK ---|"Provision_AG"| AG
+    CDK ---|"Provision_Lambda"| L1
+    CDK ---|"Provision_Lambda"| L2
+    CDK ---|"Provision_S3"| S3
+    CDK ---|"Config_Common"| COMMON
+
+    %% Click Events
+    click FE "https://github.com/pblanco/safesend/tree/main/client/"
+    click L1 "https://github.com/pblanco/safesend/blob/main/lambda/handlers/get-upload-url/index.ts"
+    click L2 "https://github.com/pblanco/safesend/blob/main/lambda/handlers/get-download-url/index.ts"
+    click COMMON "https://github.com/pblanco/safesend/tree/main/lambda/common/"
+    click AG "https://github.com/pblanco/safesend/blob/main/lib/safesend-stack.ts"
+    click CDK "https://github.com/pblanco/safesend/blob/main/bin/safesend.ts"
+
+    %% Styles
+    classDef frontend fill:#87CEFA,stroke:#000,stroke-width:2px;
+    classDef gateway fill:#E0BBE4,stroke:#000,stroke-width:2px;
+    classDef lambda fill:#90EE90,stroke:#000,stroke-width:2px;
+    classDef storage fill:#FFA500,stroke:#000,stroke-width:2px;
+    classDef cdk fill:#FFD700,stroke:#000,stroke-width:2px;
+    classDef common fill:#F4A460,stroke:#000,stroke-width:2px;
+```
+
 ## Configuration
 
 The application can be configured through the following parameters:
