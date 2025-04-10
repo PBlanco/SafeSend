@@ -80,6 +80,8 @@ The client application is deployed using AWS Amplify:
    - Build command: `npm run build`
    - Output directory: `dist`
 3. Set up environment variables in the Amplify Console
+   - `AMPLIFY_MONOREPO_APP_ROOT`: `client`
+   - `VITE_API_ENDPOINT`: Endpoint URL value outputted from your CDK deploy
 4. Configure automatic deployments from the main branch
 
 When changes are pushed to the main branch, Amplify will automatically build and deploy the updated client application.
@@ -103,16 +105,3 @@ The application can be configured through the following parameters:
 - `allowedOrigins`: List of allowed CORS origins
 - `expirationDays`: Number of days before files are automatically deleted
 - `maxFileSize`: Maximum allowed file size for uploads
-
-## License
-
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). This means:
-
-- ✅ You can use this software freely
-- ✅ You can modify and distribute this software
-- ✅ You must share any modifications you make if you distribute the software
-- ✅ You must share any modifications if you use the software to provide a service over a network
-- ❌ You cannot use this code in proprietary/closed-source software
-- ❌ You cannot sell this software as a standalone product
-
-See the [LICENSE](LICENSE) file for details.

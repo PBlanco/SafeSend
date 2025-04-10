@@ -36,3 +36,7 @@ dist/
 build/
 
 .cursor/**
+
+cdk.out/**
+
+requirements.md
