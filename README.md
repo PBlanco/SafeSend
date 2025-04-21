@@ -14,29 +14,6 @@ A secure file transfer application built with AWS CDK, TypeScript, and React. Th
 - `/bin` - CDK app entry point
 - `/test` - Test files for the infrastructure and Lambda functions
 
-## Prerequisites
-
-- Node.js (v20 or later)
-- AWS CLI configured with appropriate credentials
-- npm or yarn package manager
-
-## Setup and Installation
-
-1. Install backend dependencies:
-```bash
-npm install
-```
-
-2. Install frontend dependencies:
-```bash
-cd client
-npm install
-```
-
-3. Configure your environment variables:
-- Copy `.env.example` to `.env` in both the root directory and client directory
-- Set up necessary AWS credentials and API endpoints
-
 ## Development Commands
 
 ### Backend (CDK)
@@ -63,28 +40,121 @@ From the `client` directory:
 
 ## Deployment
 
-### Backend Deployment
+### Prerequisites
 
-The backend infrastructure is deployed using AWS CDK:
+Before deploying, ensure you have:
+1. An AWS account with appropriate permissions
+2. AWS CLI installed and configured with your credentials
+3. Node.js v20 or later installed
+4. npm package manager
 
+### Initial Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/PBlanco/SafeSend.git 
+cd SafeSend
+```
+
+2. Install dependencies:
+```bash
+# Install backend dependencies
+npm install
+
+# Install frontend dependencies
+cd client
+npm install
+cd ..
+```
+
+3. Set up AWS Amplify hosting:
+   - Navigate to the [AWS Amplify Console](https://us-east-1.console.aws.amazon.com/amplify/apps)
+   - Create a new app and connect it to your GitHub repository
+   - Configure the build settings:
+     - Build command: `npm run build`
+     - Output directory: `dist`
+     - Base directory: `client`
+
+4. Configure backend environment variables:
+   - Create a `.env` file in the root directory based on `.env.example`:
+   ```bash
+   ALLOWED_ORIGINS=https://your-amplify-domain.amplifyapp.com
+   MAX_FILE_SIZE=5242880  # 5MB default, adjust if needed
+   # You'll add the bucket name after CDK deployment
+   ```
+
+5. Deploy the backend infrastructure:
 ```bash
 npx cdk deploy
 ```
+   - Note the output values which you'll need:
+     - API Gateway URL
+     - S3 Bucket Name
 
-### Frontend Deployment
+6. Update environment variables with deployment outputs:
+   - Update your root `.env` file with the S3 bucket name:
+   ```bash
+   BUCKET_NAME=your-s3-bucket-name-from-cdk-output
+   ```
+   
+   - Create a `client/.env` file based on `client/.env.example`:
+   ```bash
+   VITE_API_ENDPOINT=https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/
+   ```
+   
+   - Add [environment variables](https://docs.aws.amazon.com/amplify/latest/userguide/setting-env-vars.html) in the AWS Amplify Console:
+   ```
+   Branch: All Branches
+   Variable: VITE_API_ENDPOINT
+   Value: https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/
+   ```
 
-The client application is deployed using AWS Amplify:
+7. Trigger a deployment of the frontend:
+   - Push a change to the main branch of the connected GitHub repository, or
+   - Manually redeploy from the Amplify Console
 
-1. Connect your GitHub repository to AWS Amplify through the AWS Console
-2. Configure the build settings to use the following commands:
-   - Build command: `npm run build`
-   - Output directory: `dist`
-3. Set up environment variables in the Amplify Console
-   - `AMPLIFY_MONOREPO_APP_ROOT`: `client`
-   - `VITE_API_ENDPOINT`: Endpoint URL value outputted from your CDK deploy
-4. Configure automatic deployments from the main branch
+8. Verify deployment:
+   - Check that the frontend is accessible at your Amplify domain
+   - Test file upload and download functionality
+   - Verify CORS is working correctly
 
-When changes are pushed to the main branch, Amplify will automatically build and deploy the updated client application.
+### Ongoing Deployments
+
+#### Backend Updates
+
+For backend changes (Lambda functions, API Gateway, S3 configurations):
+
+1. Make your changes to the backend code
+2. Inspect changes using CDK: `npx cdk diff`
+3. Deploy updates using CDK: `npx cdk deploy`
+4. If API endpoints change, update the environment variables in:
+   - Your local `client/.env` (for development)
+   - AWS Amplify Console (for production)
+
+#### Frontend Updates
+
+Frontend changes are automatically deployed when you push to the main branch:
+
+1. Make your changes to the frontend code
+2. Commit and push to your GitHub repository
+3. Amplify will automatically detect the changes, build, and deploy the updated frontend
+
+### Local Development
+
+To work on the project locally:
+
+1. Start the frontend development server:
+```bash
+cd client
+npm run dev
+```
+
+2. For testing Lambda functions locally:
+```bash
+npm run local-upload-lambda
+npm run local-download-lambda
+```
+
 
 ## Architecture
 
@@ -155,7 +225,7 @@ flowchart TD
 
 ## Configuration
 
-The application can be configured through the following parameters:
+The CDK Stack can be configured through the following parameters:
 
 - `allowedOrigins`: List of allowed CORS origins
 - `expirationDays`: Number of days before files are automatically deleted
