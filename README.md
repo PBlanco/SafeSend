@@ -4,48 +4,43 @@ A secure file transfer application built with AWS CDK, TypeScript, and React. Th
 
 ## Project Structure
 
-- `/client` - React frontend application built with Vite
-- `/lambda` - AWS Lambda functions for handling file operations
-  - `/handlers` - Lambda function handlers for upload and download URL generation
-  - `/common` - Shared code between Lambda functions
-  - `/types` - TypeScript type definitions
+- `/client` - React frontend application
+- `/lambda` - AWS Lambda functions for file operations
 - `/lib` - CDK infrastructure code
-  - `safesend-stack.ts` - Main CDK stack defining AWS resources
 - `/bin` - CDK app entry point
-- `/test` - Test files for the infrastructure and Lambda functions
+- `/test` - Test files
 
 ## Development Commands
 
 ### Backend (CDK)
 
-* `npm run build`   - Compile TypeScript to JavaScript
-* `npm run watch`   - Watch for changes and compile
-* `npm run test`    - Run Jest unit tests
-* `npx cdk deploy`  - Deploy the stack to your AWS account/region
-* `npx cdk diff`    - Compare deployed stack with current state
-* `npx cdk synth`   - Emit the synthesized CloudFormation template
+* `npm run build`   - Compile TypeScript
+* `npm run watch`   - Watch and compile
+* `npm run test`    - Run tests
+* `npx cdk deploy`  - Deploy stack
+* `npx cdk diff`    - Compare stack
+* `npx cdk synth`   - Emit CloudFormation template
 
 ### Lambda Testing
 
-* `npm run local-upload-lambda`   - Test the upload Lambda function locally
-* `npm run local-download-lambda` - Test the download Lambda function locally
+* `npm run local-upload-lambda`   - Test upload Lambda locally
+* `npm run local-download-lambda` - Test download Lambda locally
 
 ### Frontend (Client)
 
 From the `client` directory:
 
-* `npm run dev`     - Start the development server
+* `npm run dev`     - Start development server
 * `npm run build`   - Build for production
-* `npm run preview` - Preview production build locally
+* `npm run preview` - Preview production build
 
 ## Deployment
 
 ### Prerequisites
 
-Before deploying, ensure you have:
-1. An AWS account with appropriate permissions
-2. AWS CLI installed and configured with your credentials
-3. Node.js v20 or later installed
+1. AWS account with appropriate permissions
+2. AWS CLI installed and configured
+3. Node.js v20+
 4. npm package manager
 
 ### Initial Setup
@@ -58,115 +53,108 @@ cd SafeSend
 
 2. Install dependencies:
 ```bash
-# Install backend dependencies
+# Backend
 npm install
 
-# Install frontend dependencies
+# Frontend
 cd client
 npm install
 cd ..
 ```
 
 3. Set up AWS Amplify hosting:
-   - Navigate to the [AWS Amplify Console](https://us-east-1.console.aws.amazon.com/amplify/apps)
-   - Create a new app and connect it to your GitHub repository
-   - Configure the build settings:
+   - Create a new app in [AWS Amplify Console](https://us-east-1.console.aws.amazon.com/amplify/apps)
+   - Connect to your GitHub repository
+   - Configure build settings:
      - Build command: `npm run build`
      - Output directory: `dist`
      - Base directory: `client`
 
-4. Configure backend environment variables:
-   - Create a `.env` file in the root directory based on `.env.example`:
+4. Configure backend environment:
+   - Create a `.env` file based on `.env.example`:
    ```bash
    ALLOWED_ORIGINS=https://your-amplify-domain.amplifyapp.com
-   MAX_FILE_SIZE=5242880  # 5MB default, adjust if needed
-   # You'll add the bucket name after CDK deployment
+   MAX_FILE_SIZE=5242880  # 5MB default
    ```
 
-5. Deploy the backend infrastructure:
+5. Deploy backend:
 ```bash
 npx cdk deploy
 ```
-   - Note the output values which you'll need:
-     - API Gateway URL
-     - S3 Bucket Name
+   - Note API Gateway URL and S3 Bucket Name from outputs
 
-6. Update environment variables with deployment outputs:
-   - Update your root `.env` file with the S3 bucket name:
+6. Update environment variables:
+   - Root `.env`:
    ```bash
    BUCKET_NAME=your-s3-bucket-name-from-cdk-output
    ```
    
-   - Create a `client/.env` file based on `client/.env.example`:
+   - `client/.env`:
    ```bash
    VITE_API_ENDPOINT=https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/
    ```
    
-   - Add [environment variables](https://docs.aws.amazon.com/amplify/latest/userguide/setting-env-vars.html) in the AWS Amplify Console:
+   - Add in AWS Amplify Console:
    ```
    Branch: All Branches
    Variable: VITE_API_ENDPOINT
    Value: https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/
    ```
 
-7. Trigger a deployment of the frontend:
-   - Push a change to the main branch of the connected GitHub repository, or
-   - Manually redeploy from the Amplify Console
+7. Deploy frontend:
+   - Push to GitHub or manually deploy from Amplify Console
 
-8. Verify deployment:
-   - Check that the frontend is accessible at your Amplify domain
-   - Test file upload and download functionality
-   - Verify CORS is working correctly
+8. Verify deployment by testing upload/download functionality
 
 ### Ongoing Deployments
 
 #### Backend Updates
 
-For backend changes (Lambda functions, API Gateway, S3 configurations):
-
-1. Make your changes to the backend code
-2. Inspect changes using CDK: `npx cdk diff`
-3. Deploy updates using CDK: `npx cdk deploy`
-4. If API endpoints change, update the environment variables in:
-   - Your local `client/.env` (for development)
-   - AWS Amplify Console (for production)
+1. Make changes to backend code
+2. Run `npx cdk diff` to review changes
+3. Deploy with `npx cdk deploy`
+4. Update environment variables if endpoints change
 
 #### Frontend Updates
 
-Frontend changes are automatically deployed when you push to the main branch:
+Push to GitHub repository - Amplify will automatically build and deploy
 
-1. Make your changes to the frontend code
-2. Commit and push to your GitHub repository
-3. Amplify will automatically detect the changes, build, and deploy the updated frontend
+## Local Development
 
-### Local Development
+1. Update backend environment for local development:
+```bash
+# Update your root .env file to include localhost
+ALLOWED_ORIGINS=https://your-amplify-domain.amplifyapp.com,http://localhost:5173
+```
 
-To work on the project locally:
+2. Redeploy backend to apply CORS changes:
+```bash
+npx cdk deploy
+```
 
-1. Start the frontend development server:
+3. Start frontend:
 ```bash
 cd client
 npm run dev
 ```
 
-2. For testing Lambda functions locally:
+4. Test Lambda functions:
 ```bash
 npm run local-upload-lambda
 npm run local-download-lambda
 ```
 
-
 ## Architecture
 
-This application uses the following AWS services:
+This application uses:
 
-- **S3 Bucket**: Stores uploaded files with automatic expiration
-- **Lambda Functions**: Generate pre-signed URLs for secure uploads and downloads
-- **API Gateway**: Provides RESTful endpoints for the Lambda functions
-- **IAM**: Manages permissions between services
-- **Amplify**: Hosts and deploys the frontend application
+- **S3 Bucket**: File storage with expiration
+- **Lambda Functions**: Generate pre-signed URLs
+- **API Gateway**: REST endpoints
+- **IAM**: Service permissions
+- **Amplify**: Frontend hosting
 
-The application implements secure file transfer using AWS pre-signed URLs and S3 bucket policies. All file transfers are encrypted in transit and at rest.
+All file transfers are encrypted in transit and at rest.
 
 ```mermaid
 flowchart TD
@@ -227,6 +215,36 @@ flowchart TD
 
 The CDK Stack can be configured through the following parameters:
 
-- `allowedOrigins`: List of allowed CORS origins
-- `expirationDays`: Number of days before files are automatically deleted
-- `maxFileSize`: Maximum allowed file size for uploads
+- `allowedOrigins`: CORS origins (default: from env.ALLOWED_ORIGINS)
+- `expirationDays`: Days before files auto-delete (default: 7)
+- `maxFileSize`: Maximum allowed file size in bytes (default: from env.MAX_FILE_SIZE or 5MB)
+- `stageName`: API Gateway stage name (default: 'prod')
+- `logRetentionDays`: CloudWatch log retention period (default: 30)
+
+## Security
+
+SafeSend implements several security measures:
+
+- **Pre-signed URLs**: Temporary, scoped access for uploads/downloads
+- **S3 Encryption**: Server-side encryption (SSE-S3)
+- **CORS Configuration**: Restricts origins that can access the API
+- **File Expiration**: Automatic deletion of files after configured period
+- **No Public Access**: S3 bucket blocks all public access by default
+- **IAM Role Separation**: Principle of least privilege for Lambda functions
+
+## Troubleshooting
+
+### CORS Issues
+- Verify `ALLOWED_ORIGINS` in `.env` matches your frontend URL
+- Check API Gateway CORS configuration
+- Ensure pre-flight (OPTIONS) requests work properly
+
+### Upload Failures
+- Check file size against `MAX_FILE_SIZE` limit
+- Validate Lambda execution role has S3 permissions
+- Review CloudWatch logs for Lambda errors
+
+### Download Issues
+- Verify file exists in S3 bucket
+- Check file hasn't expired (default: 7 days)
+- Ensure correct file ID is being requested
